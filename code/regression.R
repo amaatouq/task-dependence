@@ -6,6 +6,8 @@ library(sjmisc)
 library(effects)
 library(sjstats) #use for r2 functions
 library(ggeffects)
+library(ggplot2)
+library(stargazer)
 
 
 setwd("~/Dropbox (MIT)/projects/task_dependent_WOC/write-up/arxiv/data/")
@@ -17,7 +19,8 @@ data <- read.csv('../data/empirical_data/prior_research_group.csv')
 model.interaction <- lmer(revised_abs_error_zscore ~ Omega_hat*influence + (1 | group_id), 
                      data = data)
 
-tab_model(model.interaction)
+tab_model(model.interaction, show.stat=TRUE)
+
 plot_model(model.interaction, type = "int")
 
 
@@ -26,14 +29,24 @@ plot_model(model.interaction, type = "int")
 
 data <- data[!(data$influence==0),] #we can't say anything about solo as they can't improve
 
-m <- glmer(improved ~ Omega_hat +  (1 | group_id) +  (1 | dataset),
+m <- glmer(improved ~ Omega_hat +  (1 | group_id),
            data = data, family = binomial)
 
 summary(m)
-sjPlot::tab_model(m, show.re.var= TRUE)
+sjPlot::tab_model(m, show.re.var= TRUE, show.stat=TRUE)
 
-pred=ggpredict(m, "Omega_hat") %>%
-  plot() +
-  labs(x="Omega (Fitted)", y="Prob. of Improvement")
 
-pred
+mydf <- ggpredict(m, "Omega_hat")
+ggplot(mydf, aes(x, predicted)) + 
+  geom_line() +  xlim(0, 1) + ylim(0, 1) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
+
+
+stargazer(c(model.interaction,m), 
+          title="The main effects of task environment $Omega$ and the interaction with social influence (i.e., centralization) Each datapoint is an experimental trial. The results are from a mixed effect model with a random effect for the group ID.",
+          covariate.labels = c("$Omega$", "Influence", "$Omega$ x Influence", "Intercept"),
+          column.labels =  NULL,
+          dep.var.labels = c("Standardized Absolute Error", "Group improved after social interaction")
+)
+
+
