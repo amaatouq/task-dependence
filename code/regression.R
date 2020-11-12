@@ -21,7 +21,7 @@ model.interaction <- lmer(revised_abs_error_zscore ~ Omega_hat*influence + (1 | 
 
 tab_model(model.interaction, show.stat=TRUE)
 
-plot_model(model.interaction, type = "int")
+plot_model(model.interaction, type = "int", show.data=TRUE)
 
 
 
@@ -36,8 +36,8 @@ summary(m)
 sjPlot::tab_model(m, show.re.var= TRUE, show.stat=TRUE)
 
 
-mydf <- ggpredict(m, "Omega_hat")
-ggplot(mydf, aes(x, predicted)) + 
+mydf <- ggpredict(m, "Omega_hat", add.data = TRUE)
+ggplot(mydf, aes(x, predicted)) +
   geom_line() +  xlim(0, 1) + ylim(0, 1) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .1)
 
